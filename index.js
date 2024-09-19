@@ -5,12 +5,16 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = require('./routes/authRoutes');
 const error = require('./middlewares/error');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 //body parser
 app.use(express.json());
+
+//cookie parser
+app.use(cookieParser());
 
 app.use('/api/user', router);
 

@@ -20,7 +20,9 @@ const getUserById = async (id) => {
 }
 
 const updateUserById = async (id, body) => {
-    await pool.query(`UPDATE users SET firstname = ?, lastname =?, email =?, mobile =?, password =? WHERE id = ?`, [body.firstname, body.lastname, body.email, body.mobile, body.password, id]);
+    const setClause = Object.keys(body).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(body), id];
+    await pool.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
 }
 
 const deleteUser = async (id) => {

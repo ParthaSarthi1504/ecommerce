@@ -1,15 +1,16 @@
 const { comparePassword, hashPassword } = require("../config/bcrypt");
 const {
   generateJsonWebToken,
+  generateRefreshToken,
   verifyJsonWebToken,
 } = require("../config/jwtToken");
 const asyncErrorHandler = require("../middlewares/authErrorHandler");
 const userModel = require("../models/userModel");
+const cookies = require('cookie-parser');
 
 
 //REGISTER USER
-const registerUser = async (req, res) => {
-  try {
+const registerUser = asyncErrorHandler(async (req, res) => {
     const { email, password } = req.body;
     const userExist = await userModel.getUserByEmail(email);
     if (!userExist) {
@@ -20,14 +21,10 @@ const registerUser = async (req, res) => {
     } else {
       return res.status(400).json({ message: "User already Exist" });
     }
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-};
+});
 
 //LOGIN USER
-const loginUser = async (req, res) => {
-  try {
+const loginUser = asyncErrorHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(404).json({ message: "Enter Email and Password" });
@@ -47,13 +44,23 @@ const loginUser = async (req, res) => {
 
     const payload = { email };
 
-    const jwtToken = await generateJsonWebToken(payload);
+    const accessToken = await generateJsonWebToken(payload); // Access Token
+    const refreshToken = await generateRefreshToken(payload); // Refresh Token
 
-    return res.status(200).json({ jwtToken });
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-};
+    const userId = user?.id;
+    delete user["id"];
+    const updateBody = {...user,refresh_token: refreshToken};
+
+    await userModel.updateUserById(userId,updateBody) // adding refresh token into user table
+
+    // Storing refresh token in cookies
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      maxAge: 7*24*60*60*1000
+    })
+
+    return res.status(200).json({ accessToken, refreshToken });
+});
 
 //GET ALL USERS
 const getAllUsers = asyncErrorHandler(async (req, res, next) => {

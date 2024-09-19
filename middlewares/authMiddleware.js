@@ -14,9 +14,11 @@ const authMiddleware = async (req, res, next) => {
             const isValidToken = await verifyJsonWebToken(jwtToken);
             if (!isValidToken) {
                 throw new Error("Invalid JWT Token")
-                // return res.status(400).json({ message: "Invalid JWT Token" });
             }
             const user = await getUserByEmail(isValidToken?.email)
+            if(!user){
+                throw Error("User Not Found");
+            }
             req.user = user;
             next()
         } else {
