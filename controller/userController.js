@@ -6,6 +6,8 @@ const {
 const asyncErrorHandler = require("../middlewares/authErrorHandler");
 const userModel = require("../models/userModel");
 
+
+//REGISTER USER
 const registerUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -23,6 +25,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+//LOGIN USER
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -54,109 +57,47 @@ const loginUser = async (req, res) => {
 
 //GET ALL USERS
 const getAllUsers = asyncErrorHandler(async (req, res, next) => {
-    let jwtToken;
-    const authHeader = req.headers["authentication"];
-
-    if (authHeader) {
-      jwtToken = authHeader.split(" ")[1];
-    }
-
-    if (jwtToken) {
-      const isValidToken = await verifyJsonWebToken(jwtToken);
-      if (!isValidToken) {
-        throw new Error("Invalid JWT Token")
-        // return res.status(400).json({ message: "Invalid JWT Token" });
-      }
-      const allUsers = await userModel.getAllUsers();
-      res.status(200).json(allUsers);
-    } else {
-      throw new Error("Token Not Found")
-      // return res.status(404).json({ message: "Token Not Found" });
-    }
+  const allUsers = await userModel.getAllUsers();
+  res.status(200).json(allUsers);
 });
 
 //GET USER BY ID
-const getUserById = async (req, res) => {
-  try {
-    let jwtToken;
-    const { id } = req.params;
-    const authHeader = req.headers["authentication"];
-
-    if (authHeader) {
-      jwtToken = authHeader.split(" ")[1];
-    }
-
-    if (jwtToken) {
-      const isValidToken = await verifyJsonWebToken(jwtToken);
-      if (!isValidToken) {
-        return res.status(400).json({ message: "Invalid JWT Token" });
-      }
-      const user = await userModel.getUserById(id);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        return res.status(404).json({ message: "User Not Found" });
-      }
-    } else {
-      return res.status(404).json({ message: "Token Not Found" });
-    }
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
+const getUserById = asyncErrorHandler(async (req, res,next) => {
+  const id = req.params;
+  const user = await userModel.getUserById(id);
+  if (!user) {
+    throw Error("User Not Found");
   }
-};
+  res.status(200).json(user);
+});
 
 //UPDATE USER
-const updateUserById = async (req, res) => {
-  try {
-    let jwtToken;
-    const { id } = req.params;
-    const authHeader = req.headers["authentication"];
-
-    if (authHeader) {
-      jwtToken = authHeader.split(" ")[1];
-    }
-    console.log("tryujuuj")
-    if (jwtToken) {
-      const isValidToken = await verifyJsonWebToken(jwtToken);
-      if (!isValidToken) {
-        return res.status(400).json({ message: "Invalid JWT Token" });
-      }
-      
-      await userModel.updateUserById(id, req.body);
-      res.status(200).json({ message: "User Updated Successfully" });
-    } else {
-      return res.status(404).json({ message: "Token Not Found" });
-    }
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-};
+const updateUserById = asyncErrorHandler(async (req, res,next) => {
+  const id = req.params;
+  await userModel.updateUserById(id, req.body);
+  res.status(200).json({ message: "User Updated Successfully" });
+});
 
 //DELETE USER
-const deleteUserById = async (req, res) => {
-  try {
-    let jwtToken;
-    const { id } = req.params;
-    const authHeader = req.headers["authentication"];
+const deleteUserById = asyncErrorHandler(async (req, res,next) => {
+  const { id } = req.params;
+  await userModel.deleteUser(id);
+  res.status(200).json({ message: "User Deleted Sucessfully" });
+});
 
-    if (authHeader) {
-      jwtToken = authHeader.split(" ")[1];
-    }
+//BLOCK USER
+const blockUserById = asyncErrorHandler(async (req, res,next) => {
+  const { id } = req.params;
+  await userModel.blockUser(id);
+  res.status(200).json({ message: "User Blocked Sucessfully" });
+});
 
-    if (jwtToken) {
-      const isValidToken = await verifyJsonWebToken(jwtToken);
-      if (!isValidToken) {
-        return res.status(400).json({ message: "Invalid JWT Token" });
-      }
-      await userModel.deleteUser(id);
-      res.status(200).json({ message: "User Deleted Sucessfully" });
-    } else {
-      return res.status(404).json({ message: "Token Not Found" });
-    }
-  } catch (error) {
-    return res.status(400).json({ message: error.message });
-  }
-};
+//UNBLOCK USER
+const unBlockUserById = asyncErrorHandler(async (req, res,next) => {
+  const { id } = req.params;
+  await userModel.unBlockUser(id);
+  res.status(200).json({ message: "User Unblocked Sucessfully" });
+});
 
 module.exports = {
   registerUser,
@@ -164,5 +105,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   deleteUserById,
-  updateUserById
+  updateUserById,
+  blockUserById,
+  unBlockUserById
 };
