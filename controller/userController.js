@@ -7,6 +7,7 @@ const {
 const asyncErrorHandler = require("../middlewares/authErrorHandler");
 const userModel = require("../models/userModel");
 const cookies = require('cookie-parser');
+const validateUserId = require("../utills/valitateUserId");
 
 
 //REGISTER USER
@@ -59,7 +60,29 @@ const loginUser = asyncErrorHandler(async (req, res) => {
       maxAge: 7*24*60*60*1000
     })
 
-    return res.status(200).json({ accessToken, refreshToken });
+    return res.status(200).json({ accessToken});
+});
+
+//LOGOUT 
+const logoutUser = asyncErrorHandler(async(req,res,next)=>{
+  const refreshToken = req?.cookies?.refreshToken;
+  if(!refreshToken){
+    throw Error("Refresh Token Not Found");
+  }
+  const user = await userModel.getUser("refresh_token",refreshToken);
+  if (!user){
+    res.clearCookie("refreshToken",{
+      httpOnly: true,
+      secure: true
+    })
+    res.sendStatus(204);
+  }
+  await userModel.updateUserById(user?.id,{refresh_token: ''})
+  res.clearCookie("refreshToken",{
+    httpOnly: true,
+    secure: true
+  })
+  res.sendStatus(204);
 });
 
 //GET ALL USERS
@@ -70,7 +93,7 @@ const getAllUsers = asyncErrorHandler(async (req, res, next) => {
 
 //GET USER BY ID
 const getUserById = asyncErrorHandler(async (req, res,next) => {
-  const id = req.params;
+  const {id} = req.params;
   const user = await userModel.getUserById(id);
   if (!user) {
     throw Error("User Not Found");
@@ -80,7 +103,13 @@ const getUserById = asyncErrorHandler(async (req, res,next) => {
 
 //UPDATE USER
 const updateUserById = asyncErrorHandler(async (req, res,next) => {
-  const id = req.params;
+  const {id} = req.params;
+  await validateUserId(id);
+
+  const {body} = req;
+  if (body?.email || body?.password){
+    throw Error("Email or Password can not be Updated");
+  }
   await userModel.updateUserById(id, req.body);
   res.status(200).json({ message: "User Updated Successfully" });
 });
@@ -88,6 +117,7 @@ const updateUserById = asyncErrorHandler(async (req, res,next) => {
 //DELETE USER
 const deleteUserById = asyncErrorHandler(async (req, res,next) => {
   const { id } = req.params;
+  await validateUserId(id);
   await userModel.deleteUser(id);
   res.status(200).json({ message: "User Deleted Sucessfully" });
 });
@@ -95,6 +125,7 @@ const deleteUserById = asyncErrorHandler(async (req, res,next) => {
 //BLOCK USER
 const blockUserById = asyncErrorHandler(async (req, res,next) => {
   const { id } = req.params;
+  await validateUserId(id);
   await userModel.blockUser(id);
   res.status(200).json({ message: "User Blocked Sucessfully" });
 });
@@ -102,17 +133,36 @@ const blockUserById = asyncErrorHandler(async (req, res,next) => {
 //UNBLOCK USER
 const unBlockUserById = asyncErrorHandler(async (req, res,next) => {
   const { id } = req.params;
+  await validateUserId(id);
   await userModel.unBlockUser(id);
   res.status(200).json({ message: "User Unblocked Sucessfully" });
 });
 
+//HANDLE REFRESH TOKEN
+const handleRefreshToken = asyncErrorHandler(async(req,res,next)=>{
+  let refreshToken;
+  const cookie = req.cookies;
+  if (cookie){
+    refreshToken = cookie["refreshToken"];
+  }
+  if (!refreshToken) throw Error("Refresh Token Not Found");
+  const decoded = await verifyJsonWebToken(refreshToken, "REFRESH_TOKEN");
+  if (!decoded) throw Error("Invalid Refresh Token");
+  const {email} = decoded;
+  // const user = await userModel.getUserByEmail(email);
+  const accessToken = await generateJsonWebToken({email})
+  res.status(200).json({accessToken});
+})
+
 module.exports = {
   registerUser,
   loginUser,
+  logoutUser,
   getAllUsers,
   getUserById,
   deleteUserById,
   updateUserById,
   blockUserById,
-  unBlockUserById
+  unBlockUserById,
+  handleRefreshToken
 };

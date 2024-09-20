@@ -1,8 +1,8 @@
 const { verifyJsonWebToken } = require("../config/jwtToken");
 const { getUserByEmail } = require("../models/userModel");
+const asyncErrorHandler = require("./authErrorHandler");
 
-const authMiddleware = async (req, res, next) => {
-    try {
+const authMiddleware = asyncErrorHandler(async (req, res, next) => {
         let jwtToken;
         const authHeader = req.headers["authorization"];
 
@@ -11,7 +11,8 @@ const authMiddleware = async (req, res, next) => {
         }
 
         if (jwtToken) {
-            const isValidToken = await verifyJsonWebToken(jwtToken);
+            const isValidToken = await verifyJsonWebToken(jwtToken,"ACCESS_TOKEN");
+            console.log("isValidToken==",isValidToken)
             if (!isValidToken) {
                 throw new Error("Invalid JWT Token")
             }
@@ -24,9 +25,6 @@ const authMiddleware = async (req, res, next) => {
         } else {
             throw Error("Access Token Not Found");
         }
-    } catch (err) {
-        next(err);
-    }
-}
+});
 
 module.exports = authMiddleware;

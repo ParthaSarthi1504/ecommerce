@@ -5,6 +5,16 @@ const getUserByEmail = async (email) => {
     return rows[0];
 }
 
+const getUserById = async (id) => {
+    const [rows] = await pool.query(`SELECT * FROM users WHERE id = ?`, [id]);
+    return rows[0];
+}
+
+const getUser = async (key, value) => {
+    const [rows] = await pool.query(`SELECT * FROM users WHERE ${key} = ?`, [value]);
+    return rows[0];
+}
+
 const createUser = async (body) => {
     await pool.query(`INSERT INTO users (firstname, lastname, email, mobile, password) VALUES (?,?,?,?,?)`, [body.firstname, body.lastname, body.email, body.mobile, body.password]);
 }
@@ -14,14 +24,11 @@ const getAllUsers = async () => {
     return rows;
 }
 
-const getUserById = async (id) => {
-    const [rows] = await pool.query(`SELECT * FROM users WHERE id = ?`, [id]);
-    return rows[0];
-}
-
 const updateUserById = async (id, body) => {
     const setClause = Object.keys(body).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(body), id];
+    console.log("setClause====>",setClause);
+    console.log("values===>",values);
     await pool.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
 }
 
@@ -40,6 +47,7 @@ const unBlockUser = async (id) => {
 
 module.exports = {
     getUserByEmail,
+    getUser,
     createUser, 
     getAllUsers, 
     getUserById, 
