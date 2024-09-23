@@ -1,9 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const db = require("./config/dbConfig");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const router = require('./routes/authRoutes');
+const authRouter = require('./routes/authRoutes');
+const productRouter = require('./routes/productRoutes');
 const error = require('./middlewares/error');
 const cookieParser = require('cookie-parser');
 
@@ -16,8 +15,8 @@ app.use(express.json());
 //cookie parser
 app.use(cookieParser());
 
-app.use('/api/user', router);
-
+app.use('/api/user', authRouter);
+app.use('/api/product',productRouter);
 
 // Global Error Handler
 app.use(error);

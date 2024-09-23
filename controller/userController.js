@@ -7,7 +7,7 @@ const {
 const asyncErrorHandler = require("../middlewares/authErrorHandler");
 const userModel = require("../models/userModel");
 const cookies = require('cookie-parser');
-const validateUserId = require("../utills/valitateUserId");
+const {validateUserId} = require("../utills/valitation");
 
 
 //REGISTER USER

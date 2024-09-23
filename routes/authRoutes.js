@@ -2,7 +2,6 @@ const express = require('express');
 const { registerUser, loginUser, getAllUsers, getUserById, deleteUserById, updateUserById, blockUserById, unBlockUserById, handleRefreshToken, logoutUser } = require('../controller/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const isAdmin = require('../middlewares/isAdmin');
-const validateUserId = require('../utills/valitateUserId');
 
 const router = express.Router();
 
