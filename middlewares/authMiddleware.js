@@ -12,7 +12,6 @@ const authMiddleware = asyncErrorHandler(async (req, res, next) => {
 
         if (jwtToken) {
             const isValidToken = await verifyJsonWebToken(jwtToken,"ACCESS_TOKEN");
-            console.log("isValidToken==",isValidToken)
             if (!isValidToken) {
                 throw new Error("Invalid JWT Token")
             }

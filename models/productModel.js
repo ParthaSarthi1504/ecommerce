@@ -1,3 +1,4 @@
+const pool = require("../config/dbConfig");
 
 const getProductById = async (id) => {
     const [rows] = await pool.query(`SELECT * FROM products WHERE id = ?`, [id]);
@@ -10,9 +11,11 @@ const getProduct = async (key, value) => {
 }
 
 const createProduct = async (body) => {
-    const setClause = Object.keys(body).map(key => `${key} = ?`).join(', ');
-    const values = [...Object.values(body)];
-    await pool.query(`INSERT INTO products (${setClause}) VALUES (?,?,?,?,?)`, values);
+    const setClause = Object.keys(body).map(key => key).join(', ');
+    const values =  [...Object.values(body)];
+    const valuesExpected = Object.keys(body).map(_ => "?").join(' ,');
+
+    await pool.query(`INSERT INTO products (${setClause}) VALUES (${valuesExpected})`,values);
 }
 
 const getAllProducts = async () => {
@@ -23,8 +26,6 @@ const getAllProducts = async () => {
 const updateProductById = async (id, body) => {
     const setClause = Object.keys(body).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(body), id];
-    console.log("setClause====>",setClause);
-    console.log("values===>",values);
     await pool.query(`UPDATE products SET ${setClause} WHERE id = ?`, values);
 }
 

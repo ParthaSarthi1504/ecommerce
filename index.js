@@ -5,6 +5,7 @@ const authRouter = require('./routes/authRoutes');
 const productRouter = require('./routes/productRoutes');
 const error = require('./middlewares/error');
 const cookieParser = require('cookie-parser');
+const morgan = require("morgan");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -14,6 +15,9 @@ app.use(express.json());
 
 //cookie parser
 app.use(cookieParser());
+
+//morgan - to check api status, time
+app.use(morgan('dev'));
 
 app.use('/api/user', authRouter);
 app.use('/api/product',productRouter);

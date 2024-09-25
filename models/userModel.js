@@ -27,8 +27,6 @@ const getAllUsers = async () => {
 const updateUserById = async (id, body) => {
     const setClause = Object.keys(body).map(key => `${key} = ?`).join(', ');
     const values = [...Object.values(body), id];
-    console.log("setClause====>",setClause);
-    console.log("values===>",values);
     await pool.query(`UPDATE users SET ${setClause} WHERE id = ?`, values);
 }
 
